@@ -15,15 +15,56 @@ function getInitialTodos(): Todo[] {
   return saved ? JSON.parse(saved) : []
 }
 
+function InstallBanner() {
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || 
+                         (navigator as any).standalone === true
+    const dismissed = localStorage.getItem("install-banner-dismissed")
+    
+    if (isIOS && !isStandalone && !dismissed) {
+      setShow(true)
+    }
+  }, [])
+
+  const dismiss = () => {
+    localStorage.setItem("install-banner-dismissed", "true")
+    setShow(false)
+  }
+
+  if (!show) return null
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 text-white p-4 safe-area-pb">
+      <div className="max-w-md mx-auto flex items-start gap-3">
+        <div className="flex-1">
+          <p className="font-medium mb-1">Install Todo App</p>
+          <p className="text-sm text-zinc-400">
+            Tap <span className="inline-flex items-center px-1"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L12 14M12 2L8 6M12 2L16 6M4 14V20H20V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg></span> then &quot;Add to Home Screen&quot;
+          </p>
+        </div>
+        <button 
+          onClick={dismiss}
+          className="text-zinc-400 hover:text-white p-1"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [newTodo, setNewTodo] = useState("")
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTodos(getInitialTodos())
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
 
@@ -65,7 +106,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-black py-12 px-4 pb-24">
       <div className="max-w-md mx-auto">
         <h1 className="text-4xl font-bold text-center mb-2 text-zinc-900 dark:text-zinc-100">
           Todo
@@ -153,6 +194,7 @@ export default function Home() {
           )}
         </ul>
       </div>
+      <InstallBanner />
     </div>
   )
 }
