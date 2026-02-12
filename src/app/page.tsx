@@ -21,7 +21,7 @@ function InstallBanner() {
   useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches || 
-                         (navigator as any).standalone === true
+                         ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true)
     const dismissed = localStorage.getItem("install-banner-dismissed")
     
     if (isIOS && !isStandalone && !dismissed) {
