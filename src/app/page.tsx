@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 interface Todo {
   id: string
@@ -9,30 +9,34 @@ interface Todo {
   createdAt: number
 }
 
+function getInitialTodos(): Todo[] {
+  if (typeof window === "undefined") return []
+  const saved = localStorage.getItem("todos")
+  return saved ? JSON.parse(saved) : []
+}
+
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [newTodo, setNewTodo] = useState("")
-  const [loaded, setLoaded] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem("todos")
-    if (saved) {
-      setTodos(JSON.parse(saved))
-    }
-    setLoaded(true)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTodos(getInitialTodos())
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (loaded) {
-      localStorage.setItem("todos", JSON.stringify(todos))
-    }
-  }, [todos, loaded])
+  const saveTodos = useCallback((newTodos: Todo[]) => {
+    setTodos(newTodos)
+    localStorage.setItem("todos", JSON.stringify(newTodos))
+  }, [])
 
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTodo.trim()) return
     
-    setTodos([
+    saveTodos([
       {
         id: crypto.randomUUID(),
         title: newTodo,
@@ -45,14 +49,14 @@ export default function Home() {
   }
 
   const toggleTodo = (id: string) => {
-    setTodos(todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)))
+    saveTodos(todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)))
   }
 
   const deleteTodo = (id: string) => {
-    setTodos(todos.filter((t) => t.id !== id))
+    saveTodos(todos.filter((t) => t.id !== id))
   }
 
-  if (!loaded) {
+  if (!mounted) {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900 dark:border-zinc-100"></div>
